@@ -135,8 +135,9 @@ def create_formatted_excel(data, output_filename="formatted_report.xlsx"):
 
     sorted_statuses = sorted(list(all_statuses))
     bring_to_last=[sorted_statuses.pop(sorted_statuses.index("Workshop Checked In")),
-    sorted_statuses.pop(sorted_statuses.index("Total WO"))]
-    sorted_statuses= [bring_to_last[1]]+sorted_statuses+[bring_to_last[0]]
+    sorted_statuses.pop(sorted_statuses.index("Total WO")),
+    sorted_statuses.pop(sorted_statuses.index("Material cost")),]
+    sorted_statuses= [bring_to_last[1]]+sorted_statuses+[bring_to_last[0]]+[bring_to_last[2]]
     
 
     # Define the merged cell range (A1 to Q1 for 17 columns)
@@ -197,6 +198,7 @@ def create_formatted_excel(data, output_filename="formatted_report.xlsx"):
             # # Apply the fill to each cell in the row
             for cell in ws[last_row_num]:
                cell.border =right_left_border
+               cell.alignment=Alignment(horizontal='center', vertical='center')
                 
             
             # Apply red font to the entire row if the project name is 'total'
@@ -271,6 +273,7 @@ def add_est_cost(input):
         
         if row[2] and row[cost_col_idx - 1]:
             cost = float(row[cost_col_idx - 1])
+            cost= round(cost, 2)
             
         else:
             continue

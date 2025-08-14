@@ -46,6 +46,24 @@ proj={"TC-TERMINAL":"TC-TERMINL", "TC-OPEN":"TC-OPEN",
 
 
 
+def hide_unused_cells(sheet):
+    """Hides all rows and columns not containing data."""
+    
+    # Get the last row and column that have content
+    max_row = sheet.max_row
+    max_col = sheet.max_column
+
+    # Hide all rows from the next row to the end of the sheet
+    for row_num in range(max_row + 1, sheet.max_row + 10):  # A small range is fine for visual example
+        sheet.row_dimensions[row_num].hidden = True
+        
+    # Hide all columns from the next column to the end of the sheet
+    for col_num in range(max_col + 1, sheet.max_column + 10): # A small range for example
+        col_letter = get_column_letter(col_num)
+        sheet.column_dimensions[col_letter].hidden = True
+
+
+
 def add_dicts(dict1, dict2):
     result = dict1.copy()
     for key, value in dict2.items():
@@ -196,7 +214,7 @@ def create_formatted_excel(data, output_filename="formatted_report.xlsx"):
             ws.merge_cells(start_row=start_row, end_row=end_row, start_column=1, end_column=1)
             # Center the merged cell text
             merged_cell = ws.cell(row=start_row, column=1)
-            merged_cell.fill=colors[count%4]
+            # merged_cell.fill=colors[count%4]
 
             ws.cell(row=start_row, column=1).alignment = Alignment(vertical='center')
 
@@ -218,6 +236,7 @@ def create_formatted_excel(data, output_filename="formatted_report.xlsx"):
     # Apply the border to each cell
         cell.border = bottom_top_right_border
         cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws.column_dimensions["A"].width=10
 
     # for cell in ws['L']:
     # # Apply the border to each cell
@@ -226,10 +245,15 @@ def create_formatted_excel(data, output_filename="formatted_report.xlsx"):
 
     # 5. Save the workbook
     try:
+        # delete_empty_columns(ws)
+        # delete_empty_rows(ws)
+        hide_unused_cells(ws)
         wb.save(output_filename)
         print(f"Successfully created '{output_filename}'")
     except Exception as e:
         print(f"Error saving the file: {e}")
+
+
 
 
 
@@ -278,8 +302,18 @@ def add_est_cost(input):
             # status_dict={status:1}
         # dict[date]=add_dicts(dict[date],status_dict)
     
+def delete_empty_rows(sheet):
+    for row_num in reversed(range(1, sheet.max_row + 1)):
+        is_empty = all(cell.value is None for cell in sheet[row_num])
+        if is_empty:
+            sheet.delete_rows(row_num, 1)
             
 
+def delete_empty_columns(sheet):
+    for col_num in reversed(range(1, sheet.max_column + 1)):
+        is_empty = all(sheet.cell(row=row, column=col_num).value is None for row in range(1, sheet.max_row + 1))
+        if is_empty:
+            sheet.delete_cols(col_num, 1)
     
 
 status_report="status.xlsx"

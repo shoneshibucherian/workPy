@@ -288,6 +288,8 @@ def add_est_cost(input):
 
         if project not in dict[date]:
             dict[date][project]={}
+        if "Total" not in dict[date]:
+            dict[date]["Total"]={}
 
 
         if "Material cost" not in dict[date]["Total"]:

@@ -5,6 +5,7 @@ from datetime import datetime
 import openpyxl
 import pprint
 import configparser
+import time
 
 # Create parser
 config = configparser.ConfigParser(interpolation=None)
@@ -340,4 +341,5 @@ cost_report="cost.xlsx"
 creatDic(status_report)
 add_est_cost(cost_report)
 # pprint.pprint(dict)
-create_formatted_excel(dict, "output/status_project_report.xlsx")
+create_formatted_excel(dict, "../output/status_project_report.xlsx")
+time.sleep(5.0)

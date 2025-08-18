@@ -6,6 +6,7 @@ import openpyxl
 import pprint
 import configparser
 import time
+import os
 
 # Create parser
 config = configparser.ConfigParser(interpolation=None)
@@ -13,6 +14,7 @@ config = configparser.ConfigParser(interpolation=None)
 # Read config.ini
 config.read("config.ini")
 dict={}
+month_project={}
 
 date_project={}
 
@@ -20,11 +22,6 @@ cost_date_formate=config["cost"]["date"]
 status_date_formate=config["status"]["date"]
 # "%Y-%m-%d"
 
-light_blue_fill = PatternFill(start_color="ADD8E6", end_color="ADD8E6", fill_type="solid")
-light_purple_fill = PatternFill(start_color="E6E6FA", end_color="E6E6FA", fill_type="solid")
-light_pink_fill = PatternFill(start_color="FFB6C1", end_color="FFB6C1", fill_type="solid")
-light_green_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
-colors=[light_blue_fill,light_green_fill,light_purple_fill, light_pink_fill]
 bottom_border = Border(bottom=Side(style='thick'))
 left_border = Border(left=Side(style='thick'))
 right_border = Border(right=Side(style='thin'))
@@ -58,22 +55,6 @@ proj={"TC-TERMINAL":"TC-TERMINL", "TC-OPEN":"TC-OPEN",
 
 
 
-def hide_unused_cells(sheet):
-    """Hides all rows and columns not containing data."""
-    
-    # Get the last row and column that have content
-    max_row = sheet.max_row
-    max_col = sheet.max_column
-
-    # Hide all rows from the next row to the end of the sheet
-    for row_num in range(max_row + 1, sheet.max_row + 10):  # A small range is fine for visual example
-        sheet.row_dimensions[row_num].hidden = True
-        
-    # Hide all columns from the next column to the end of the sheet
-    for col_num in range(max_col + 1, sheet.max_column + 10): # A small range for example
-        col_letter = get_column_letter(col_num)
-        sheet.column_dimensions[col_letter].hidden = True
-
 
 
 def add_dicts(dict1, dict2):
@@ -97,15 +78,39 @@ def creatDic(input):
         status = row[status_col_idx - 1]
         
         date= row[3].strftime(status_date_formate)
+        month= row[3].strftime("%Y-%m")
         project=row[20]
         
         
+        if month not in month_project:
+            month_project[month]={"Total":{"Total WO":0}}
+        if project not in month_project[month]:
+            month_project[month][project]={"Total WO":0}  
+
+        if status not in month_project[month]["Total"]:
+            month_project[month]["Total"][status]=1
+            
+        else:
+            month_project[month]['Total'][status]+=1
         
+        if status not in month_project[month][project]:
+            month_project[month][project][status]=1
+            
+        else:
+            month_project[month][project][status]+=1
+        
+        
+        
+        
+
+
         if date not in dict:
             dict[date]={"Total":{"Total WO":0}}
         if project not in dict[date]:
             dict[date][project]={"Total WO":0}
 
+       
+        
         if status not in dict[date]["Total"]:
             dict[date]["Total"][status]=1
             
@@ -122,6 +127,8 @@ def creatDic(input):
         
         dict[date][project]["Total WO"]+=1
         dict[date]["Total"]["Total WO"]+=1
+        month_project[month][project]["Total WO"]+=1
+        month_project[month]["Total"]["Total WO"]+=1
 
 
 
@@ -129,15 +136,24 @@ def creatDic(input):
         # dict[date]=add_dicts(dict[date],status_dict)
 
 
-def create_formatted_excel(data, output_filename="formatted_report.xlsx"):
+def create_formatted_excel(data, new , title, output_filename="formatted_report.xlsx"):
     """
     Creates an Excel file from a nested dictionary, formatting the 'total' rows in red
     and merging date cells.
     """
-    
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Project Status Report"
+
+    if new==1:
+        wb=load_workbook(output_filename)
+        ws=wb.create_sheet(title, 1)
+    else:
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = title
+        
+    # Handle the case where the file is not found
+   
+        
+   
     
     # 1. Get all unique statuses (including 'cost') for headers
     all_statuses = set()
@@ -261,9 +277,8 @@ def create_formatted_excel(data, output_filename="formatted_report.xlsx"):
     try:
         # delete_empty_columns(ws)
         # delete_empty_rows(ws)
-        hide_unused_cells(ws)
         wb.save(output_filename)
-        print(f"Successfully created '{output_filename}'")
+        print(f"Successfully created '{title}'")
     except Exception as e:
         print(f"Error saving the file: {e}")
 
@@ -294,11 +309,28 @@ def add_est_cost(input):
         project=proj[row[8]]
         # print(row[2])    
         date= row[2].strftime(cost_date_formate)
+        month= row[2].strftime("%Y-%m")
         # print(date)
 
         
         if date not in dict:
             dict[date]={}
+        if month not in month_project:
+            month_project[month]={}
+        if project not in month_project[month]:
+            month_project[month][project]={}
+        if "Total" not in month_project[month]:
+            month_project[month]["Total"]={}
+        if "Material cost" not in month_project[month]["Total"]:
+            month_project[month]['Total']["Material cost"]=cost
+        else:
+            month_project[month]['Total']["Material cost"]+=cost
+
+        if "Material cost" not in  month_project[month][project]:
+            month_project[month][project]["Material cost"]=cost
+        else:
+            month_project[month][project]["Material cost"]+=cost
+
 
         if project not in dict[date]:
             dict[date][project]={}
@@ -321,18 +353,6 @@ def add_est_cost(input):
             # status_dict={status:1}
         # dict[date]=add_dicts(dict[date],status_dict)
     
-def delete_empty_rows(sheet):
-    for row_num in reversed(range(1, sheet.max_row + 1)):
-        is_empty = all(cell.value is None for cell in sheet[row_num])
-        if is_empty:
-            sheet.delete_rows(row_num, 1)
-            
-
-def delete_empty_columns(sheet):
-    for col_num in reversed(range(1, sheet.max_column + 1)):
-        is_empty = all(sheet.cell(row=row, column=col_num).value is None for row in range(1, sheet.max_row + 1))
-        if is_empty:
-            sheet.delete_cols(col_num, 1)
     
 
 status_report="status.xlsx"
@@ -340,6 +360,7 @@ cost_report="cost.xlsx"
 
 creatDic(status_report)
 add_est_cost(cost_report)
-# pprint.pprint(dict)
-create_formatted_excel(dict, "../output/status_project_report.xlsx")
+# pprint.pprint(month_project)
+create_formatted_excel(dict, 0 , "day_wise_Status_Report" ,"../output/status_project_report.xlsx", )
+create_formatted_excel(month_project,1,"month_wise_Status_Report",  "../output/status_project_report.xlsx")
 time.sleep(5.0)

@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['..\\script\\mainScript.py'],
+    ['script\\mainScript.py'],
     pathex=[],
     binaries=[],
     datas=[],

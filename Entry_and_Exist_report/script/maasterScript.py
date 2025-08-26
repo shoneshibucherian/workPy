@@ -28,7 +28,7 @@ if os.path.exists(os.path.join(output_dir, "Daily_Breakdown_Report.xlsx")):
 
 total_summary = {}
 hour_summary = {}
-daily_status_dir= os.path.join(os.getcwd(), 'daily_status')
+daily_status_dir= os.path.join(os.getcwd(), 'input')
 file_name = 'input.xlsx'
 file_path = os.path.join(daily_status_dir, file_name)
 
@@ -53,7 +53,7 @@ for file in os.listdir(daily_status_dir):
 print("Files in AQAQ daily_status directory:")  
 for file in file_list:
     print(file)
-    sheet_name=file[file.index("daily_status")+len("daily_status")+1:file.index("Daily")]
+    sheet_name=file[file.index("\input")+len("\input")+1:file.index("Daily")]
     # read the unique values in column E in the excel file
     from openpyxl import load_workbook
     input_wbook = load_workbook(file)

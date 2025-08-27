@@ -49,6 +49,9 @@ def process_excel_data(colnames,file_path,Sdate):
     for row in sheet.iter_rows(min_row=2):
         try:
             # Get the values from the relevant columns
+            print(row[0].value)
+            if type(row[0].value)==int:
+                row[0].value = str(row[0].value)
             asset_number = row[0].value.replace(" ", "")
             scheduled_completion_date_str = str(row[3].value)
 
